@@ -1,5 +1,5 @@
 [package]
-name = "change_checker"
+name = "xom_json"
 version = "0.1.0"
 edition = "2021"
 
