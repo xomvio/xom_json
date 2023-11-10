@@ -68,40 +68,40 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
 
     let mut cevval:Vec<Val>=vec![];
 
-    let mut s = "".to_string();
     while let Some(c) = jchars.next(){
+        //let mut val = Val::Null;
         match c {
             '"'=>{
-                while let Some(c) = jchars.next(){
-                    match c {
-                        '"'=>break,
-                        '\\'=>{
-                            //let nextc = jchars.next().unwrap();
-                            //s.push(nextc);
+                let mut str:String = String::from("");
+                while let Some(c2) = jchars.next(){
+                    match c2 {
+                        '"'=>{
+                            break;
                         }
                         _=>{
-                            s.push(c);
+                            str.push(c2);
                         }
                     }
                 }
+                //val = Val::Strink(str);
+                cevval.push(Val::Strink(str));
             }
-            'n'=>{
 
+            '['=>{
+                let v:Vec<Val>;
+                (jchars,v) = get_arr(jchars);
+                //val = Val::Array(v);
+                cevval.push(Val::Array(v));
             }
             ','=>{
-                cevval.push(Val::Strink((&s).to_string()));
-                s="".to_string();
+                //cevval.push(val);
             }
             ']'=>{
-                cevval.push(Val::Strink((&s).to_string()));
+                //cevval.push(val);
                 break;
             }
-            ' '=>{}
-            _=>{
-                println!("aqq");
-            }//isnumeric or err
+            _=>{}//sayi falan
         }
-        //jchars.next();
     }
     (jchars, cevval)
 }
@@ -188,7 +188,6 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                         else{}//error unexpected char
                     }
                     '['=>{
-                        stat=Readstat::Valend;
                         val = Val::Array(vec![]);
                         match &mut val {
                             Val::Array(a)=>{                        
@@ -199,8 +198,8 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                                 }
         
                                 stat=Readstat::Valend;
-                                jobject.insert(key.clone(), val_own(&val));
-                                key = String::new();
+                                //jobject.insert(key.clone(), val_own(&val));
+                                //key = String::new();
                             }                            
                             _=>{}//imkansiz error
                         }
@@ -224,7 +223,7 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                             '"'=>{
                                 stat=Readstat::Valend;
                             }
-                            '\\'=>{
+                            /*'\\'=>{
                                 let nextc = jchars.next().unwrap();
                                 match nextc {
                                     '"'=>{
@@ -232,7 +231,7 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                                     }
                                     _=>{}
                                 }
-                            }
+                            }*/
                             _=>{
                                 s.push(c);
                             }
@@ -240,8 +239,13 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                     }
                     Val::Number(n)=>{
                         match c {
-                            ','|'}'=>{
-                                stat=Readstat::Valend;
+                            '}'=>{
+                                stat=Readstat::Objend;
+                                jobject.insert(key.clone(), val_own(&val));
+                                key = String::new();                                
+                            }
+                            ','=>{
+                                stat=Readstat::Objbegin;
                                 jobject.insert(key.clone(), val_own(&val));
                                 key = String::new();
                             }
@@ -264,11 +268,13 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                 match c {
                     '}'=>{
                         stat=Readstat::Objend;
-                        jobject.insert(key.clone(), val_own(&val));
+                        if key!=""{
+                            jobject.insert(key.clone(), val_own(&val));
+                        }
                         key = String::new();
                     }
-                    '"'=>{
-                        stat=Readstat::Keybegin;
+                    ','=>{
+                        stat=Readstat::Objbegin;
                         jobject.insert(key.clone(), val_own(&val));
                         key = String::new();
                     }
