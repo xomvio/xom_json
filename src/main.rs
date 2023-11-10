@@ -36,6 +36,22 @@ fn main(){
         println!("{}: {}", key, value);
     }
 
-    let json_obj2 = xom_json::Val::Object(xom_json::json_parse(jtext));
+    let json_obj2 = xom_json::Val::Object(xom_json::json_parse(jtext.clone()));
     println!("{}",json_obj2);
+
+    let json_obj3 = xom_json::json_parse(jtext.clone());
+    
+    match &json_obj3["topping"] {
+        xom_json::Val::Array(a)=>{
+          for i in a{
+            match i {
+              xom_json::Val::Object(o)=>{
+                println!("id is: {}",o["id"]);
+              }
+              _=>{}
+            }
+          }
+        }
+        _=>{}
+    }
 }
