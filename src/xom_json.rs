@@ -11,6 +11,7 @@ enum Readstat{
     Objend
 }
 
+
 pub enum Val {
     Null,
     Bool(bool),
@@ -49,7 +50,7 @@ impl fmt::Display for Val {
             Self::Null=>write!(f,"null"),
             Self::Bool(x)=>write!(f,"{}",x),
             Self::Number(x)=>write!(f,"{}",x),
-            Self::Strink(x)=>write!(f,"{}",x),
+            Self::Strink(x)=>write!(f,"{} ",x),
             Self::Array(x)=>{
                 let mut res:String ="[ ".to_string();
                 for i in 0..x.len() {
@@ -59,7 +60,15 @@ impl fmt::Display for Val {
                 res.pop();
                 write!(f,"{} ]",res)
             }
-            _=>{write!(f,"erorke")}
+            Self::Object(x)=>{
+                let mut res:String = "{ ".to_string();
+                for (key, val) in x{
+                    res+= key;
+                    res+=": ";
+                    res+= val.to_string().as_str();
+                }
+                write!(f,"{} }}",res)
+            }
         }
     }
 }
@@ -86,7 +95,11 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
                 //val = Val::Strink(str);
                 cevval.push(Val::Strink(str));
             }
-
+            '{'=>{
+                let hmap:HashMap<String, Val>;
+                (jchars, hmap) = read_json(jchars);
+                cevval.push(Val::Object(hmap));
+            }
             '['=>{
                 let v:Vec<Val>;
                 (jchars,v) = get_arr(jchars);
@@ -106,17 +119,31 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
     (jchars, cevval)
 }
 
+pub fn json_parse(jtext:String) -> HashMap<String, Val> {
+    let mut jchars = jtext.chars();
+    let mut hmap:HashMap<String, Val> = HashMap::new();
+    while let Some(c) = jchars.next(){
+        match c {
+            '{'=>{
+                (jchars, hmap) = read_json(jchars);
+            }
+            ' '=>{}
+            _=>{}//error unexpected char c
+        }
+    }
+    println!("jchars left: {}",jchars.as_str());
+    hmap
+}
 
-pub fn read_json(jtext:String) -> HashMap<String, Val>  {
+pub fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
 
-    let mut jchars=jtext.chars();
 
 
     let mut jobject:HashMap<String, Val> = HashMap::new(); 
 
     let mut key = String::from("");
     let mut val = Val::Null;
-    let mut stat = Readstat::None;
+    let mut stat = Readstat::Objbegin;
 
     while let Some(c) = jchars.next(){
         match stat {
@@ -205,6 +232,12 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                         }
 
                     }
+                    '{'=>{
+                        let tmap:HashMap<String,Val>;
+                        (jchars,tmap) = read_json(jchars);
+                        val = Val::Object(tmap);
+                        stat=Readstat::Valend;
+                    }
                     ' '=>{}
                     _=>{
                         if c.is_numeric() {
@@ -272,6 +305,7 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                             jobject.insert(key.clone(), val_own(&val));
                         }
                         key = String::new();
+                        break;
                     }
                     ','=>{
                         stat=Readstat::Objbegin;
@@ -283,10 +317,10 @@ pub fn read_json(jtext:String) -> HashMap<String, Val>  {
                 }
             }
             Readstat::Objend=>{
-                println!("warning: json main object has ended but document continues.");
+                println!("warning: json main object has ended but document continues. c: {}",c);
                 break;
             }
         }
     }
-    jobject
+    (jchars,jobject)
 }
