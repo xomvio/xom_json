@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt, str::Chars};
 
 enum Readstat{
-    None,
+    None,   //considering remove
     Objbegin,
     Keybegin,
     Keyend,
@@ -10,7 +10,6 @@ enum Readstat{
     Valend,
     Objend
 }
-
 
 pub enum Val {
     Null,
@@ -50,7 +49,7 @@ impl fmt::Display for Val {
             Self::Null=>write!(f,"null"),
             Self::Bool(x)=>write!(f,"{}",x),
             Self::Number(x)=>write!(f,"{}",x),
-            Self::Strink(x)=>write!(f,"{} ",x),
+            Self::Strink(x)=>write!(f,"{}",x),
             Self::Array(x)=>{
                 let mut res:String ="[ ".to_string();
                 for i in 0..x.len() {
@@ -66,7 +65,9 @@ impl fmt::Display for Val {
                     res+= key;
                     res+=": ";
                     res+= val.to_string().as_str();
+                    res.push(',');
                 }
+                res.pop();
                 write!(f,"{} }}",res)
             }
         }
@@ -131,13 +132,10 @@ pub fn json_parse(jtext:String) -> HashMap<String, Val> {
             _=>{}//error unexpected char c
         }
     }
-    println!("jchars left: {}",jchars.as_str());
     hmap
 }
 
-pub fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
-
-
+fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
 
     let mut jobject:HashMap<String, Val> = HashMap::new(); 
 
@@ -275,7 +273,8 @@ pub fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                             '}'=>{
                                 stat=Readstat::Objend;
                                 jobject.insert(key.clone(), val_own(&val));
-                                key = String::new();                                
+                                key = String::new();
+                                break;
                             }
                             ','=>{
                                 stat=Readstat::Objbegin;
