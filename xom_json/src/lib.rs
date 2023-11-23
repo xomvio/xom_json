@@ -1,14 +1,12 @@
 use std::{collections::HashMap, fmt, str::Chars};
 
 enum Readstat{
-    None,   //considering remove
     Objbegin,
     Keybegin,
     Keyend,
     Middle,
     Valbegin,
-    Valend,
-    Objend
+    Valend
 }
 
 pub enum Val {
@@ -79,7 +77,6 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
     let mut cevval:Vec<Val>=vec![];
 
     while let Some(c) = jchars.next(){
-        //let mut val = Val::Null;
         match c {
             '"'=>{
                 let mut str:String = String::from("");
@@ -88,12 +85,15 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
                         '"'=>{
                             break;
                         }
+                        '\\'=>{
+                            jchars.next();
+                            str.push(c2);
+                        }
                         _=>{
                             str.push(c2);
                         }
                     }
                 }
-                //val = Val::Strink(str);
                 cevval.push(Val::Strink(str));
             }
             '{'=>{
@@ -104,17 +104,69 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
             '['=>{
                 let v:Vec<Val>;
                 (jchars,v) = get_arr(jchars);
-                //val = Val::Array(v);
                 cevval.push(Val::Array(v));
             }
-            ','=>{
-                //cevval.push(val);
-            }
+            ','|' '|'\t'|'\r'|'\n'=>{}
             ']'=>{
-                //cevval.push(val);
                 break;
             }
-            _=>{}//sayi falan
+            'n'=>{
+                let mut n:String = String::from("");
+                n.push(jchars.next().unwrap());
+                n.push(jchars.next().unwrap());
+                n.push(jchars.next().unwrap());
+                if n=="ull"{
+                    cevval.push(Val::Null);
+                }
+                else {
+                    panic!("json validation failed. unexpected characters \"n{}\"", n);
+                }
+            }
+            't'=>{
+                let mut n:String = String::from("");
+                n.push(jchars.next().unwrap());
+                n.push(jchars.next().unwrap());
+                n.push(jchars.next().unwrap());
+                if n=="rue"{
+                    cevval.push(Val::Bool(true));
+                }
+                else {
+                    panic!("json validation failed. unexpected characters \"t{}\"", n);
+                }
+            }
+            'f'=>{
+                let mut n:String = String::from("");
+                n.push(jchars.next().unwrap());
+                n.push(jchars.next().unwrap());
+                n.push(jchars.next().unwrap());
+                n.push(jchars.next().unwrap());
+                if n=="alse"{
+                    cevval.push(Val::Bool(false));
+                }
+                else {
+                    panic!("json validation failed. unexpected characters \"f{}\"", n);
+                }
+            }
+            _=>{
+                if c.is_numeric(){
+                    let mut num:String = String::from(c);
+                    while let Some(c2) = jchars.next(){
+                        match c2 {
+                            ','=>{
+                                break;
+                            }
+                            ' '|'\t'|'\r'|'\n'=>{}
+                            _=>{
+                                num.push(c2);
+                            }
+                        }
+                    }
+                    cevval.push(Val::Number(num));
+                }
+                else {
+                    panic!("json validation failed. unexpected character \'{}\'", c);
+                }
+            }
         }
     }
     (jchars, cevval)
@@ -128,8 +180,10 @@ pub fn json_parse(jtext:String) -> HashMap<String, Val> {
             '{'=>{
                 (jchars, hmap) = read_json(jchars);
             }
-            ' '=>{}
-            _=>{}//error unexpected char c
+            ' '|'\t'|'\r'|'\n'=>{}
+            _=>{
+                panic!("json validation failed. unexpected character \'{}\'", c);
+            }
         }
     }
     hmap
@@ -145,18 +199,13 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
 
     while let Some(c) = jchars.next(){
         match stat {
-            Readstat::None=>{
-                match c {
-                    '{'=>stat=Readstat::Objbegin,
-                    ' '=>{}
-                    _=>{}//error unexpected char
-                }
-            }
             Readstat::Objbegin=>{
                 match c {
                     '"'=>stat=Readstat::Keybegin,
-                    ' '=>{}
-                    _=>{}//error unexpected char
+                    ' '|'\t'|'\r'|'\n'=>{}
+                    _=>{
+                        panic!("json validation failed. unexpected character \'{}\'", c);
+                    }
                 }
             }
             Readstat::Keybegin=>{
@@ -168,8 +217,10 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
             Readstat::Keyend=>{
                 match c {
                     ':'=>stat=Readstat::Middle,
-                    ' '=>{}
-                    _=>{}//error unexpected char
+                    ' '|'\t'|'\r'|'\n'=>{}
+                    _=>{
+                        panic!("error: unexpected character \'{}\'", c);
+                    }
                 }
             }
             Readstat::Middle=>{
@@ -187,7 +238,9 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                             stat=Readstat::Valend;
                             val=Val::Null;
                         }
-                        else{}//error unexpected char
+                        else{
+                            panic!("json validation failed. unexpected characters \"n{}\"", n);
+                        }
                     }
                     't'=>{
                         let mut n:String = String::from("");
@@ -198,7 +251,9 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                             stat=Readstat::Valend;
                             val=Val::Bool(true);
                         }
-                        else{}//error unexpected char
+                        else{
+                            panic!("json validation failed. unexpected characters \"t{}\"", n);
+                        }
                     }
                     'f'=>{
                         let mut n:String = String::from("");
@@ -210,7 +265,9 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                             stat=Readstat::Valend;
                             val=Val::Bool(false);
                         }
-                        else{}//error unexpected char
+                        else{
+                            panic!("json validation failed. unexpected characters \"f{}\"", n);
+                        }
                     }
                     '['=>{
                         val = Val::Array(vec![]);
@@ -223,10 +280,8 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                                 }
         
                                 stat=Readstat::Valend;
-                                //jobject.insert(key.clone(), val_own(&val));
-                                //key = String::new();
                             }                            
-                            _=>{}//imkansiz error
+                            _=>{}//impossible
                         }
 
                     }
@@ -236,13 +291,15 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                         val = Val::Object(tmap);
                         stat=Readstat::Valend;
                     }
-                    ' '=>{}
+                    ' '|'\t'|'\r'|'\n'=>{}
                     _=>{
                         if c.is_numeric() {
                             stat=Readstat::Valbegin;
                             val=Val::Number(c.to_string());
                         }
-                        else{}//error unexpected char
+                        else{
+                            panic!("json validation failed. unexpected character \'{}\'", c);
+                        }
                     }
                     
                 }
@@ -254,15 +311,10 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                             '"'=>{
                                 stat=Readstat::Valend;
                             }
-                            /*'\\'=>{
-                                let nextc = jchars.next().unwrap();
-                                match nextc {
-                                    '"'=>{
-                                        s.push(nextc);
-                                    }
-                                    _=>{}
-                                }
-                            }*/
+                            '\\'=>{
+                                jchars.next();
+                                s.push(c);
+                            }
                             _=>{
                                 s.push(c);
                             }
@@ -271,39 +323,35 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                     Val::Number(n)=>{
                         match c {
                             '}'=>{
-                                stat=Readstat::Objend;
                                 jobject.insert(key.clone(), val_own(&val));
-                                key = String::new();
                                 break;
                             }
                             ','=>{
-                                stat=Readstat::Objbegin;
                                 jobject.insert(key.clone(), val_own(&val));
+                                stat=Readstat::Objbegin;
                                 key = String::new();
                             }
-                            ' '=>{},
+                            ' '|'\t'|'\r'|'\n'=>{}
                             '.'=>n.push(c),
                             _=>{
                                 if c.is_numeric(){
                                     n.push(c);
                                 }
-                                else {}//error char is not a number
+                                else {
+                                    panic!("json validation failed. unexpected character \'{}\'. expected numeric.", c);
+                                }
                             }
                         }                        
                     }
-
-                    //buraya object gelecek
-                    _=>{}
+                    _=>{}//impossible error
                 }
             }
             Readstat::Valend=>{
                 match c {
                     '}'=>{
-                        stat=Readstat::Objend;
                         if key!=""{
                             jobject.insert(key.clone(), val_own(&val));
                         }
-                        key = String::new();
                         break;
                     }
                     ','=>{
@@ -311,13 +359,11 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                         jobject.insert(key.clone(), val_own(&val));
                         key = String::new();
                     }
-                    ' '=>{}
-                    _=>{}//error unexpected char
+                    ' '|'\t'|'\r'|'\n'=>{}
+                    _=>{
+                        panic!("json validation failed. unexpected character \'{}\'", c);
+                    }
                 }
-            }
-            Readstat::Objend=>{
-                println!("warning: json main object has ended but document continues. c: {}",c);
-                break;
             }
         }
     }
