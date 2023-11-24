@@ -9,7 +9,7 @@ Example:
   {
     "id": 12468536,
     "username": "xomvio",
-    "health": 100.0,
+    "health": 100.0
   }
   "#.to_string();
 
