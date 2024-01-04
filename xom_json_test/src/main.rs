@@ -1,6 +1,5 @@
 use xom_json::Val;
 
-
 #[derive(Debug)]
 struct Player {
     id:u32,
@@ -9,14 +8,33 @@ struct Player {
     weapons:Vec<Weapon>,
     selected_weapon: u8
 }
+
 #[derive(Debug)]
 struct Weapon {
   name:String,
   bullet:u8,
-  power:i8
+  power:i8,
 }
 
-fn main(){}
+fn main(){
+  let jtext:String = r#"
+  {
+    "id": 12468536,
+    "username": "xomvio",
+    "health": 100.0,
+    "weapons":[
+      { "name": "AK-47", "bullet": 14, "power": 35 },
+      { "name": "Revolver", "bullet": 6, "power": 20 },
+      { "name": "Knife", "bullet": 1, "power":3 }
+    ],
+    "selected_weapon": 1
+  }
+  "#.to_string();
+
+  let x = xom_json::parse_as_jobject(jtext);
+
+  println!("{}",x.to_string());
+}
 
 #[test]
 fn tt() {

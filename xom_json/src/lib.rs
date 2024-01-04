@@ -47,7 +47,7 @@ impl fmt::Display for Val {
             Self::Null=>write!(f,"null"),
             Self::Bool(x)=>write!(f,"{}",x),
             Self::Number(x)=>write!(f,"{}",x),
-            Self::Strink(x)=>write!(f,"{}",x),
+            Self::Strink(x)=>write!(f,"\"{}\"",x),
             Self::Array(x)=>{
                 let mut res:String ="[ ".to_string();
                 for i in 0..x.len() {
@@ -60,10 +60,10 @@ impl fmt::Display for Val {
             Self::Object(x)=>{
                 let mut res:String = "{ ".to_string();
                 for (key, val) in x{
-                    res+= key;
-                    res+=": ";
+                    res+= format!("\"{key}\": {val},").as_str();
+                    /*res+=": ";
                     res+= val.to_string().as_str();
-                    res.push(',');
+                    res.push(',');*/
                 }
                 res.pop();
                 write!(f,"{} }}",res)
@@ -187,6 +187,23 @@ pub fn json_parse(jtext:String) -> HashMap<String, Val> {
         }
     }
     hmap
+}
+
+pub fn parse_as_jobject(jtext:String) -> Val {
+    let mut jchars = jtext.chars();
+    let mut hmap:HashMap<String, Val> = HashMap::new();
+    while let Some(c) = jchars.next(){
+        match c {
+            '{'=>{
+                (jchars, hmap) = read_json(jchars);
+            }
+            ' '|'\t'|'\r'|'\n'=>{}
+            _=>{
+                panic!("json validation failed. unexpected character \'{}\'", c);
+            }
+        }
+    }
+    Val::Object(hmap)
 }
 
 fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
