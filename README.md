@@ -1,5 +1,5 @@
 # xom_json
-It's a json parser written in Rust. There is no deserializing and serializing, yet. Because macro derives are confused me and I had to study for my midterm exams. Deserializing ahead!
+It's a json parser written in Rust. Sorry for terrible deserializing ^^
 
 More detailed usages shown at xom_json_test
 
