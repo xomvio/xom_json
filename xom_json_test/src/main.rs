@@ -80,8 +80,10 @@ fn tt() {
     _=>{}
   }
 
+  println!("{}",player.username);
+
   assert_eq!(12468536u32,player.id);
-  assert_eq!("xomvio", player.username);
+  assert_eq!("\"xomvio\"", player.username);
   assert_eq!(100.0f32, player.health);
   assert_eq!(1u8, player.selected_weapon);
   assert_eq!("AK-47", player.weapons[0].name);

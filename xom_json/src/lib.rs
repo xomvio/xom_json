@@ -1,5 +1,5 @@
-use std::{collections::HashMap, fmt, str::Chars};
-
+use std::{collections::HashMap, str::Chars};
+pub mod fmt;
 enum Readstat{
     Objbegin,
     Keybegin,
@@ -13,7 +13,7 @@ pub enum Val {
     Null,
     Bool(bool),
     Number(String),
-    Strink(String),
+    String(String),
     Array(Vec<Val>),
     Object(HashMap<String, Val>),
 }
@@ -23,7 +23,7 @@ fn val_own(v:&Val) -> Val {
         Val::Null=>return Val::Null,
         Val::Bool(a)=>return Val::Bool(a.to_owned()),
         Val::Number(a)=>return Val::Number(a.to_owned()),
-        Val::Strink(a)=>return Val::Strink(a.to_owned()),
+        Val::String(a)=>return Val::String(a.to_owned()),
         Val::Array(a)=>{
             let mut ownedvec:Vec<Val>=vec![];
             for i in a {
@@ -37,37 +37,6 @@ fn val_own(v:&Val) -> Val {
                 ownedmap.insert(i.0.to_owned(), val_own(i.1));
             }
             Val::Object(ownedmap)
-        }
-    }
-}
-
-impl fmt::Display for Val {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Null=>write!(f,"null"),
-            Self::Bool(x)=>write!(f,"{}",x),
-            Self::Number(x)=>write!(f,"{}",x),
-            Self::Strink(x)=>write!(f,"\"{}\"",x),
-            Self::Array(x)=>{
-                let mut res:String ="[ ".to_string();
-                for i in 0..x.len() {
-                    res += x[i].to_string().as_str();
-                    res.push(',');
-                }
-                res.pop();
-                write!(f,"{} ]",res)
-            }
-            Self::Object(x)=>{
-                let mut res:String = "{ ".to_string();
-                for (key, val) in x{
-                    res+= format!("\"{key}\": {val},").as_str();
-                    /*res+=": ";
-                    res+= val.to_string().as_str();
-                    res.push(',');*/
-                }
-                res.pop();
-                write!(f,"{} }}",res)
-            }
         }
     }
 }
@@ -94,7 +63,7 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
                         }
                     }
                 }
-                cevval.push(Val::Strink(str));
+                cevval.push(Val::String(str));
             }
             '{'=>{
                 let hmap:HashMap<String, Val>;
@@ -244,7 +213,7 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                 match c {
                     '"'=>{
                         stat=Readstat::Valbegin;
-                        val=Val::Strink(String::from(""));
+                        val=Val::String(String::from(""));
                     }
                     'n'=>{
                         let mut n:String = String::from("");
@@ -323,7 +292,7 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
             }
             Readstat::Valbegin=>{
                 match &mut val {
-                    Val::Strink(s)=>{
+                    Val::String(s)=>{
                         match c {
                             '"'=>{
                                 stat=Readstat::Valend;
