@@ -20,10 +20,10 @@ pub enum Val {
 
 fn val_own(v:&Val) -> Val {
     match &v {
-        Val::Null=>return Val::Null,
-        Val::Bool(a)=>return Val::Bool(a.to_owned()),
-        Val::Number(a)=>return Val::Number(a.to_owned()),
-        Val::String(a)=>return Val::String(a.to_owned()),
+        Val::Null=> Val::Null,
+        Val::Bool(a)=> Val::Bool(a.to_owned()),
+        Val::Number(a)=> Val::Number(a.to_owned()),
+        Val::String(a)=> Val::String(a.to_owned()),
         Val::Array(a)=>{
             let mut ownedvec:Vec<Val>=vec![];
             for i in a {
@@ -119,7 +119,7 @@ fn get_arr(mut jchars:Chars) -> (Chars, Vec<Val>){
             _=>{
                 if c.is_numeric(){
                     let mut num:String = String::from(c);
-                    while let Some(c2) = jchars.next(){
+                    for c2 in jchars.by_ref(){
                         match c2 {
                             ','=>{
                                 break;
@@ -257,19 +257,15 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
                     }
                     '['=>{
                         val = Val::Array(vec![]);
-                        match &mut val {
-                            Val::Array(a)=>{                        
-                                let xa: Vec<Val>;
-                                (jchars, xa)=get_arr(jchars);
-                                for x in xa {
-                                    a.push(x);
-                                }
-        
-                                stat=Readstat::Valend;
-                            }                            
-                            _=>{}//impossible
-                        }
+                        if let Val::Array(a) = &mut val {
+                            let xa: Vec<Val>;
+                            (jchars, xa)=get_arr(jchars);
+                            for x in xa {
+                                a.push(x);
+                            }
 
+                            stat=Readstat::Valend;
+                        }
                     }
                     '{'=>{
                         let tmap:HashMap<String,Val>;
@@ -335,7 +331,7 @@ fn read_json(mut jchars:Chars) -> (Chars, HashMap<String, Val>) {
             Readstat::Valend=>{
                 match c {
                     '}'=>{
-                        if key!=""{
+                        if !key.is_empty(){
                             jobject.insert(key.clone(), val_own(&val));
                         }
                         break;

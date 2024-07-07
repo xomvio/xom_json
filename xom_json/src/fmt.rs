@@ -10,8 +10,8 @@ impl fmt::Display for Val {
             Self::String(x)=>write!(f,"\"{}\"",x),
             Self::Array(x)=>{
                 let mut res:String ="[ ".to_string();
-                for i in 0..x.len() {
-                    res += x[i].to_string().as_str();
+                for item in x {
+                    res += item.to_string().as_str();
                     res.push(',');
                 }
                 res.pop();
