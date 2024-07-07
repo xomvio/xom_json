@@ -1,7 +1,0 @@
-[package]
-name = "xom_test"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-xom_json = { path = "../xom_json" }

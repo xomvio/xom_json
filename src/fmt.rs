@@ -7,7 +7,7 @@ impl fmt::Display for Val {
             Self::Null=>write!(f,"null"),
             Self::Bool(x)=>write!(f,"{}",x),
             Self::Number(x)=>write!(f,"{}",x),
-            Self::String(x)=>write!(f,"\"{}\"",x),
+            Self::String(x)=>write!(f,"{}",x),
             Self::Array(x)=>{
                 let mut res:String ="[ ".to_string();
                 for item in x {

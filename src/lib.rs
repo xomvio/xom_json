@@ -1,5 +1,6 @@
 use std::{collections::HashMap, str::Chars};
 pub mod fmt;
+pub mod tests;
 enum Readstat{
     Objbegin,
     Keybegin,
