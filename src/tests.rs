@@ -1,5 +1,5 @@
 //add tests
-use super::*;
+use super::{json_parse,Val};
 
 #[derive(Debug)]
 struct Player {
@@ -33,7 +33,7 @@ fn test() {
     }
     "#.to_string();
     
-    let json_obj = json_parse(jtext.clone());
+    let json_obj = json_parse(jtext.clone()).unwrap();
   
     let mut player:Player = Player { 
       id: json_obj["id"].to_string().parse::<u32>().unwrap(),
@@ -85,7 +85,7 @@ fn test() {
     }
     "#.to_string();
   
-    let hmap = json_parse(jtext);
+    let hmap = json_parse(jtext).unwrap();
     
     let players_username = hmap["username"].to_string();
     let players_health = hmap["health"].to_string().parse::<f32>().unwrap();

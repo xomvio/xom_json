@@ -1,5 +1,5 @@
 use std::fmt;
-use super::*;
+use super::super::Val;
 
 impl fmt::Display for Val {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
