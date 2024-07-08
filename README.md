@@ -13,7 +13,7 @@ Example:
   }
   "#.to_string();
 
-  let hmap = xom_json::json_parse(jtext);
+  let hmap = xom_json::json_parse(jtext).unwrap();
   
   let players_username = hmap["username"].to_string();
   let players_health = hmap["health"].to_string().parse::<f32>().unwrap();
