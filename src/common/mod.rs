@@ -1,7 +1,10 @@
 mod fmt;
-use std::collections::HashMap;
 use std::io::Error;
 use std::str::Chars;
+mod val;
+pub use val::Val;
+mod jobjar;
+pub use jobjar::{JObject, JArray};
 
 
 enum Readstat{
@@ -13,44 +16,8 @@ enum Readstat{
     Valend
 }
 
-pub enum Val {
-    Null,
-    Bool(bool),
-    Number(String),
-    String(String),
-    Array(Vec<Val>),
-    Object(HashMap<String, Val>),
-}
-
-impl Val {
-    pub fn to_owned(&self) -> Val {
-        match &self {
-            Val::Null=> Val::Null,
-            Val::Bool(a)=> Val::Bool(*a),
-            Val::Number(a)=> Val::Number(a.clone()),
-            Val::String(a)=> Val::String(a.clone()),
-            Val::Array(a)=>{
-                let mut ownedvec:Vec<Val>=vec![];
-                for val in a {
-                    ownedvec.push(val.to_owned());
-                }
-                Val::Array(ownedvec)
-            },
-            Val::Object(a)=>{
-                let mut ownedmap: HashMap<String,Val> = HashMap::new();
-                for (k, v) in a {
-                    ownedmap.insert(k.clone(), v.to_owned());
-                }
-                Val::Object(ownedmap)
-            }
-        }
-    }    
-}
-
-
-fn get_arr(mut jchars:Chars) -> Result<(Chars, Vec<Val>), Error>{
-
-    let mut cevval:Vec<Val>=vec![];
+pub fn get_arr(mut jchars:Chars) -> Result<(Chars, JArray), Error>{
+    let mut cevval:JArray= JArray::new();
 
     while let Some(c) = jchars.next(){
         match c {
@@ -73,15 +40,15 @@ fn get_arr(mut jchars:Chars) -> Result<(Chars, Vec<Val>), Error>{
                 cevval.push(Val::String(str));
             }
             '{'=>{
-                let hmap:HashMap<String, Val>;
-                (jchars, hmap) = match read_json(jchars) {
+                let jobj:JObject;
+                (jchars, jobj) = match read_json(jchars) {
                     Ok((jchars, hmap)) => (jchars, hmap),
                     Err(e) => return Err(e),                    
                 };
-                cevval.push(Val::Object(hmap));
+                cevval.push(Val::Object(jobj));
             }
             '['=>{
-                let v:Vec<Val>;
+                let v:JArray;
                 (jchars,v) = match get_arr(jchars) {
                     Ok((jchars, v)) => (jchars, v),
                     Err(e) => return Err(e),                    
@@ -156,9 +123,10 @@ fn get_arr(mut jchars:Chars) -> Result<(Chars, Vec<Val>), Error>{
 
 
 
-pub fn read_json(mut jchars:Chars) -> Result<(Chars, HashMap<String, Val>), Error> {
+pub fn read_json(mut jchars:Chars) -> Result<(Chars, JObject), Error> {
 
-    let mut jobject:HashMap<String, Val> = HashMap::new(); 
+    //let mut jobject:HashMap<String, Val> = HashMap::new(); 
+    let mut jobject:JObject = JObject::new();
 
     let mut key = String::from("");
     let mut val = Val::Null;
@@ -237,22 +205,22 @@ pub fn read_json(mut jchars:Chars) -> Result<(Chars, HashMap<String, Val>), Erro
                         }
                     }
                     '['=>{
-                        val = Val::Array(vec![]);
+                        val = Val::Array(JArray::new());
                         if let Val::Array(a) = &mut val {
-                            let xa: Vec<Val>;
+                            let xa: JArray;
                             (jchars, xa)= match get_arr(jchars) {
                                 Ok((jchars, xa)) => (jchars, xa),
                                 Err(e) => return Err(e),
                             };
                             for x in xa {
-                                a.push(x);
+                                a.push(x.to_owned());
                             }
 
                             stat=Readstat::Valend;
                         }
                     }
                     '{'=>{
-                        let tmap:HashMap<String,Val>;                        
+                        let tmap:JObject;                        
                         (jchars,tmap) = match read_json(jchars) {
                             Ok((jchars, tmap)) => (jchars, tmap),
                             Err(e) => return Err(e),
@@ -278,6 +246,9 @@ pub fn read_json(mut jchars:Chars) -> Result<(Chars, HashMap<String, Val>), Erro
                     Val::String(s)=>{
                         match c {
                             '"'=>{
+                                let s2 = &("\"".to_owned() + &s.to_owned() + "\"");
+                                s.clear();
+                                s.push_str(s2);
                                 stat=Readstat::Valend;
                             }
                             '\\'=>{
@@ -292,11 +263,13 @@ pub fn read_json(mut jchars:Chars) -> Result<(Chars, HashMap<String, Val>), Erro
                     Val::Number(n)=>{
                         match c {
                             '}'=>{
-                                jobject.insert(key.clone(), val.to_owned());
+                                jobject.push((key.clone(), val.to_owned()));
+                                //jobject.insert(key.clone(), val.to_owned());
                                 break;
                             }
                             ','=>{
-                                jobject.insert(key.clone(), val.to_owned());
+                                jobject.push((key.clone(), val.to_owned()));
+                                //jobject.insert(key.clone(), val.to_owned());
                                 stat=Readstat::Objbegin;
                                 key = String::new();
                             }
@@ -317,15 +290,17 @@ pub fn read_json(mut jchars:Chars) -> Result<(Chars, HashMap<String, Val>), Erro
             }
             Readstat::Valend=>{
                 match c {
-                    '}'=>{
+                    '}'|']'=>{
                         if !key.is_empty(){
-                            jobject.insert(key.clone(), val.to_owned());
+                            jobject.push((key.clone(), val.to_owned()));
+                            //jobject.insert(key.clone(), val.to_owned());
                         }
                         break;
                     }
                     ','=>{
                         stat=Readstat::Objbegin;
-                        jobject.insert(key.clone(), val.to_owned());
+                        jobject.push((key.clone(), val.to_owned()));
+                        //jobject.insert(key.clone(), val.to_owned());
                         key = String::new();
                     }
                     ' '|'\t'|'\r'|'\n'=>{}

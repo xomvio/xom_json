@@ -1,5 +1,7 @@
+use crate::common::JArray;
+
 //add tests
-use super::{json_parse,Val};
+use super::{Val,to_jobject,to_jarray};
 
 #[derive(Debug)]
 struct Player {
@@ -33,25 +35,38 @@ fn test() {
     }
     "#.to_string();
     
-    let json_obj = json_parse(jtext.clone()).unwrap();
+    let json_obj = to_jobject(jtext.clone()).unwrap();
   
-    let mut player:Player = Player { 
-      id: json_obj["id"].to_string().parse::<u32>().unwrap(),
-      username: json_obj["username"].to_string(),
-      health: json_obj["health"].to_string().parse::<f32>().unwrap(),
-      weapons:vec![],
-      selected_weapon: json_obj["selected_weapon"].to_string().parse::<u8>().unwrap()
+    let mut player:Player = Player {
+      id: json_obj.get("id").unwrap().as_u32().unwrap(),
+      username: json_obj.get("username").unwrap().as_string().unwrap(),
+      health: json_obj.get("health").unwrap().as_f32().unwrap(),
+      weapons: vec![],
+      selected_weapon: json_obj.get("selected_weapon").unwrap().as_u8().unwrap()
     };
+
+    if let Val::Array(weapon_array) = &json_obj.get("weapons").unwrap() {
+      for val in weapon_array.iter() {
+        if let Val::Object(weapon) = val {
+          player.weapons.push( Weapon {
+            name: weapon.get("name").unwrap().as_string().unwrap().to_string(),
+            bullet: weapon.get("bullet").unwrap().as_u8().unwrap(),
+            power: weapon.get("power").unwrap().as_i8().unwrap()
+          })
+        }
+      }
+    }
   
-    match &json_obj["weapons"] {
+    // GIVES THE SAME RESULT
+    /*match &json_obj.get("weapons").unwrap() {
       Val::Array(varray)=>{
-        for val in varray {
+        for val in varray.iter() {
           match val {
             Val::Object(vobject)=>{
               player.weapons.push(Weapon { 
-                  name: vobject["name"].to_string(),
-                  bullet: vobject["bullet"].to_string().parse::<u8>().unwrap(), 
-                  power: vobject["power"].to_string().parse::<i8>().unwrap()
+                  name: vobject.get("name").unwrap().to_string(),
+                  bullet: vobject.get("bullet").unwrap().as_u8().unwrap(),
+                  power: vobject.get("power").unwrap().as_i8().unwrap()
                 })
             }
             _=>{}
@@ -59,7 +74,7 @@ fn test() {
         }
       }
       _=>{}
-    }
+    }*/
   
     println!("{}",player.username);
   
@@ -85,10 +100,10 @@ fn test() {
     }
     "#.to_string();
   
-    let hmap = json_parse(jtext).unwrap();
+    let jobj = to_jobject(jtext).unwrap();
     
-    let players_username = hmap["username"].to_string();
-    let players_health = hmap["health"].to_string().parse::<f32>().unwrap();
+    let players_username = jobj.get("username").unwrap().as_string().unwrap();
+    let players_health = jobj.get("health").unwrap().as_f32().unwrap();
   
     assert_eq!(players_username,"xomvio");
     assert_eq!(players_health,100.0);
