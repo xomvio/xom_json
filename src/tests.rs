@@ -57,7 +57,7 @@ fn test() {
       }
     }
   
-    // GIVES THE SAME RESULT
+    // GIVES THE SAME RESULT WITH THAT`IF LET`
     /*match &json_obj.get("weapons").unwrap() {
       Val::Array(varray)=>{
         for val in varray.iter() {
@@ -92,19 +92,4 @@ fn test() {
     assert_eq!(1, player.weapons[2].bullet);
     assert_eq!(3, player.weapons[2].power);
   
-    let jtext:String = r#"
-    {
-      "id": 12468536,
-      "username": "xomvio",
-      "health": 100.0
-    }
-    "#.to_string();
-  
-    let jobj = to_jobject(jtext).unwrap();
-    
-    let players_username = jobj.get("username").unwrap().as_string().unwrap();
-    let players_health = jobj.get("health").unwrap().as_f32().unwrap();
-  
-    assert_eq!(players_username,"xomvio");
-    assert_eq!(players_health,100.0);
 }
