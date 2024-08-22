@@ -1,7 +1,8 @@
 use std::io::Error;
 pub mod tests;
 mod common;
-use common::{get_arr, read_json, JObject, JArray};
+use common::{get_arr, read_json};
+pub use common::{JObject, JArray};
 pub use common::Val;
 
 pub fn to_jobject(jtext:String) -> Result<JObject, Error> {
