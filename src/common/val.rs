@@ -37,45 +37,27 @@ impl Val {
     }
 
     pub fn is_null(&self) -> bool {
-        match &self {
-            Val::Null=> true,
-            _=>false
-        }
+        matches!(&self, Val::Null)
     }
 
     pub fn is_string(&self) -> bool {
-        match &self {
-            Val::String(_)=> true,
-            _=>false
-        }
+        matches!(&self, Val::String(_))
     }
 
     pub fn is_number(&self) -> bool {
-        match &self {
-            Val::Number(_)=> true,
-            _=>false
-        }
+        matches!(&self, Val::Number(_))
     }
 
     pub fn is_bool(&self) -> bool {
-        match &self {
-            Val::Bool(_)=> true,
-            _=>false
-        }
+        matches!(&self, Val::Bool(_))
     }
 
     pub fn is_array(&self) -> bool {
-        match &self {
-            Val::Array(_)=> true,
-            _=>false
-        }
+        matches!(&self, Val::Array(_))
     }
 
     pub fn is_object(&self) -> bool {
-        match &self {
-            Val::Object(_)=> true,
-            _=>false
-        }
+        matches!(&self, Val::Object(_))
     }
 
     pub fn as_bool(&self) -> Result<bool, Error> {        

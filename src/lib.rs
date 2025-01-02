@@ -1,4 +1,5 @@
 use std::io::Error;
+#[cfg(test)]
 pub mod tests;
 mod common;
 use common::{get_arr, read_json};

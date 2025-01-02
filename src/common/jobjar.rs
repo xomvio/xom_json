@@ -82,3 +82,15 @@ impl IntoIterator for JObject {
         self.0.into_iter()
     }    
 }
+
+impl Default for JObject {
+    fn default() -> Self {
+        JObject::new()
+    }
+}
+
+impl Default for JArray {
+    fn default() -> Self {
+        JArray::new()
+    }
+}
