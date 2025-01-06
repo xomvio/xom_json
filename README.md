@@ -1,3 +1,5 @@
+Just use serde man...
+
 # xom_json
 It's a JSON parser which returns JObject or JArray.
 
