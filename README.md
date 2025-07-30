@@ -1,19 +1,15 @@
-Just use serde man...
-
 # xom_json
-It's a JSON parser which returns JObject or JArray.
+zero-dependency JSON parser that returns a JObject or JArray.
 
 ### Serialization
 JObject or JArray .to_string() also means serialization.
 
 ### Deserialization
-unfortunately deserialization must be done manually.
-
-
-
+Deserialization must be done manually. See the example below.
 
 ## Example:
-More detailed usages shown at src/tests.rs <br>
+More detailed usages shown at src/tests.rs
+
 ```Rust
 let jtext = r#"
 {
@@ -34,4 +30,4 @@ assert_eq!(players_username, "xomvio");
 assert_eq!(players_health, 100.0);
 ```
 
-<b>Note:</b> when getting a string, do not use get("key").unwrap().to_string() because it gives value with "quotes". Use as_string() instead.
+**Note:** when getting a string, do not use get("key").unwrap().to_string() since it gives the value with "quotes". Use as_string() instead.
